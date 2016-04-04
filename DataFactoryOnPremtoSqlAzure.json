@@ -1,0 +1,221 @@
+﻿{
+  "contentVersion": "1.0.0.0",
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "parameters": {
+    "dataFactoryName": {
+      "type": "string",
+      "metadata": {
+        "description": "Data Factory Account name"
+      }
+    },
+    "azureSqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure SQL Database Server name"
+      }
+    },
+    "azureSqlServerUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure SQL Database Server user name"
+      }
+    },
+    "azureSqlServerPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Azure SQL Database Server password"
+      }
+    },
+    "azureTargetDatabaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure SQL Database name"
+      }
+    },
+    "azureSqlTableName": {
+      "type": "string",
+      "metadata": {
+        "description": "table in Azure SQL Database"
+      }
+    },
+    "OnPremSqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "OnPrem SQL Database Server name"
+      }
+    },
+    "OnPremSqlServerUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "OnPrem SQL Database Server user name"
+      }
+    },
+    "OnPremSqlServerPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "OnPrem SQL Database Server password"
+      }
+    },
+    "OnPremSourceDatabaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "OnPrem SQL Database name"
+      }
+    },
+    "OnPremSqlTableName": {
+      "type": "string",
+      "metadata": {
+        "description": "OnPrem SQL Database Table"
+      }
+    },
+    "OnPremGateway": {
+      "type": "string",
+      "metadata": {
+        "description": "OnPrem Gateway"
+      }
+    },
+    "location": {
+      "type": "string",
+      "allowedValues": [
+        "West US",
+        "North Europe"
+      ],
+      "metadata": {
+        "description": "Location where resources will be provisioned"
+      }
+    }
+  },
+  "variables": {
+    "apiVersion": "2014-10-01-preview",
+    "azureSqlLinkedServiceName": "AzureSqlLinkedService",
+    "OnPremSqlServerLinkedServiceName": "OnPremSqlServerLinkedService",
+    "OnPremSqlTableName": "SqlServerTable",
+    "azureSqlTableName": "azureSqlTable",
+    "PipelineName": "SQL2SQLPipeline",
+    "SqlTableName": "SqlServerTable"
+  },
+  "resources": [
+    {
+      "name": "[parameters('dataFactoryName')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "type": "Microsoft.DataFactory/datafactories",
+      "location": "[parameters('location')]",
+      "resources": [
+        {
+          "dependsOn": [
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'))]"
+          ],
+          "type": "linkedservices",
+          "name": "[variables('azureSqlLinkedServiceName')]",
+          "apiVersion": "[variables('apiVersion')]",
+          "properties": {
+            "type": "AzureSqlLinkedService",
+            "connectionString": "[concat('Server=tcp:',parameters('azureSqlServerName'),'.database.windows.net,1433;Database=', parameters('azureTargetDatabaseName'), ';User ID=',parameters('azureSqlServerUserName'),';Password=',parameters('azureSqlServerPassword'),';Trusted_Connection=False;Encrypt=True;Connection Timeout=30')]"
+          }
+        },
+        {
+          "dependsOn": [
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'))]"
+          ],
+          "type": "linkedservices",
+          "name": "[variables('OnPremSqlServerLinkedServiceName')]",
+          "apiVersion": "[variables('apiVersion')]",
+          "properties": {
+            "type": "OnPremisesSqlLinkedService",
+            "connectionString": "Data Source=,parameters('OnPremSqlServerName');Initial Catalog=,parameters('OnPremSourceDatabaseName');Integrated Security=True;User ID=,parameters('OnPremSqlServerUserName');Password=,parameters('OnPremSqlServerPassword');",
+            "gatewayLocation": "westus",
+            "gatewayName": "[concat(parameters('OnPremGateway'))]"
+          }
+        },
+        {
+          "apiVersion": "[variables('apiVersion')]",
+          "dependsOn": [ "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'))]" ],
+          "type": "tables",
+          "name": "[variables('OnPremSqlTableName')]",
+          "properties": {
+            "location": {
+              "type": "OnPremisesSqlServerTableLocation",
+              "tableName": "[parameters('OnPremSqlTableName')]",
+              "linkedServiceName": "[variables('OnPremSqlServerLinkedServiceName')]"
+            },
+            "availability": {
+              "frequency": "Day",
+              "interval": 1
+            }
+          }
+
+        },
+        {
+          "dependsOn": [
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'))]",
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'), '/linkedServices/', variables('OnPremSqlServerLinkedServiceName'))]",
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'), '/linkedServices/', variables('azureSqlLinkedServiceName'))]",
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'), '/tables/', variables('OnPremSqlTableName'))]"
+          ],
+          "type": "tables",
+          "name": "[variables('azureSqlTableName')]",
+          "apiVersion": "[variables('apiVersion')]",
+          "properties": {
+            "location": {
+              "type": "AzureSqlTableLocation",
+              "tableName": "[parameters('azureSqlTableName')]",
+              "linkedServiceName": "[variables('azureSqlLinkedServiceName')]"
+            },
+            "availability": {
+              "frequency": "Day",
+              "interval": 1
+            }
+          }
+        },
+        {
+          "dependsOn": [
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'))]",
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'), '/linkedServices/', variables('OnPremSqlServerLinkedServiceName'))]",
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'), '/linkedServices/', variables('azureSqlLinkedServiceName'))]",
+            "[concat('Microsoft.DataFactory/dataFactories/', parameters('dataFactoryName'), '/tables/', variables('azureSqlTableName'))]"
+          ],
+          "type": "datapipelines",
+          "name": "[variables('PipelineName')]",
+          "apiVersion": "[variables('apiVersion')]",
+          "properties": {
+            "description": "(v1.0) Join the Regional Campaign data and with Enriched Gamer Fact Data and push to Azure SQLD Database",
+            "activities": [
+              {
+                "name": "EgressDataAzure",
+                "description": "Push data frm SQL to Sql Azure",
+                "type": "CopyActivity",
+                "inputs": [
+                  {
+                    "name": "[variables('OnPremSqlTableName')]"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "[variables('azureSqlTableName')]"
+                  }
+                ],
+                "transformation": {
+                  "source": {
+                    "type": "SQLSource"
+                  },
+                  "sink": {
+                    "/type": "SqlSink"
+                  }
+                },
+                "Policy": {
+                  "concurrency": 1,
+                  "executionPriorityOrder": "NewestFirst",
+                  "style": "StartOfInterval",
+                  "retry": 2,
+                  "timeout": "01:00:00"
+                }
+              }
+            ],
+            "start": "2016-04-09T00:00:00Z",
+            "end": "2016-05-12T00:00:00Z"
+          }
+        }
+      ]
+    }
+  ]
+}
