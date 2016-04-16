@@ -1,5 +1,5 @@
 # Data-Factory---SQL2SQL-ARM
-ARM Templates for SQL to SQL Data Factory Pipelines
+ Templates for SQL to SQL Data Factory Pipelines
 
 
 DataFactoryOnPremtoSqlAzure.json - ARM Template to deploy OnPrem SQL to Azure SQL Pipeline
