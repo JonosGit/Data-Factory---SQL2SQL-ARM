@@ -74,6 +74,18 @@
         "description": "OnPrem Gateway"
       }
     },
+    "StartTime": {
+      "type": "string",
+      "metadata": {
+        "description": "Start Time"
+      }
+    },
+    "StopTime": {
+      "type": "string",
+      "metadata": {
+        "description": "Stop Time"
+      }
+    },
     "location": {
       "type": "string",
       "allowedValues": [
@@ -211,8 +223,8 @@
                 }
               }
             ],
-            "start": "2016-04-09T00:00:00Z",
-            "end": "2016-05-12T00:00:00Z"
+            "start": "[parameters('StartTime')]",
+            "end": "[parameters('StopTime')]"
           }
         }
       ]
