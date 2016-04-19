@@ -122,7 +122,7 @@
           "apiVersion": "[variables('apiVersion')]",
           "properties": {
             "type": "AzureSqlLinkedService",
-            "connectionString": "[concat('Server=tcp:',parameters('azureSqlServerName'),'.database.windows.net,1433;Database=', parameters('azureTargetDatabaseName'), ';User ID=',parameters('azureSqlServerUserName'),';Password=',parameters('azureSqlServerPassword'),';Trusted_Connection=False;Encrypt=True;Connection Timeout=30')]"
+            "connectionString": "Server=tcp:,parameters('azureSqlServerName').database.windows.net,1433;Database=, parameters('azureTargetDatabaseName'),;User ID=,parameters('azureSqlServerUserName'),;Password=,parameters('azureSqlServerPassword'),;Trusted_Connection=True;Encrypt=True;Connection Timeout=30"
           }
         },
         {
